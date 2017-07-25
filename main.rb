@@ -39,4 +39,20 @@ class Game
     end
   end
 
+  def user_points
+    user.inject(0) do |sum, card|
+      value = card[0].to_f unless card[0].to_f.zero?
+      value =  10 if card[0].to_f.zero?
+      sum + value
+    end
+  end
+
+  def dealer_points
+    dealer.inject(0) do |sum, card|
+      value = card[0].to_f unless card[0].to_f.zero?
+      value =  10 if card[0].to_f.zero?
+      sum + value
+    end
+  end
+
 end
