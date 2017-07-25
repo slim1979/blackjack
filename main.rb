@@ -9,9 +9,9 @@ class Game
     @deck ||= []
   end
 
-  def creating_deck
-    ["\u2660","\u2665","\u2663","\u2666"].each do |suit|
-      [2,3,4,5,6,7,8,9,10,'V','Q','K','A'].each do |value|
+  def new_deck
+    ["\u2660", "\u2665", "\u2663", "\u2666"].each do |suit|
+      [2, 3, 4, 5, 6, 7, 8, 9, 10, 'V', 'Q', 'K', 'A'].each do |value|
         @deck << value.to_s + suit.to_s
       end
     end
@@ -20,10 +20,10 @@ class Game
   def shuffling
     3.times do
       (0..5).each do |i|
-        print "Shuffling" + "."*i, "\r"
+        print 'Shuffling' + '.' * i, "\r"
         sleep 0.2
       end
-      print "               ","\r"
+      print '               ', "\r"
     end
     deck.shuffle!
   end
@@ -54,11 +54,10 @@ class Game
       sum + value
     end
   end
-
 end
 
 @game = Game.new
-@game.making_deck
+@game.new_deck
 @game.shuffling
 @game.deal_the_cards
 @game.user
