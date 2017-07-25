@@ -9,6 +9,14 @@ class Game
     @deck ||= []
   end
 
+  def creating_deck
+    ["\u2660","\u2665","\u2663","\u2666"].each do |suit|
+      [2,3,4,5,6,7,8,9,10,'V','Q','K','A'].each do |value|
+        @deck << value.to_s + suit.to_s
+      end
+    end
+  end
+
   def shuffling
     3.times do
       (0..5).each do |i|
@@ -20,11 +28,15 @@ class Game
     deck.shuffle!
   end
 
-  def creating_deck
-    ["\u2660","\u2665","\u2663","\u2666"].each do |suit|
-      [2,3,4,5,6,7,8,9,10,'V','Q','K','A'].each do |value|
-        @deck << value.to_s + suit.to_s
-      end
+  def deal_the_cards
+    2.times do
+      card = deck[0]
+      user << card
+      deck.delete card
+      card = deck[0]
+      dealer << card
+      deck.delete card
     end
   end
+
 end
