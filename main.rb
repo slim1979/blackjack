@@ -1,11 +1,12 @@
 class Game
-  attr_accessor :dealer_response
-  attr_reader :deck, :user_cards, :dealer_cards, :bank, :balance
+  attr_accessor :dealer_response, :user_balance, :dealer_balance
+  attr_reader :deck, :user_cards, :dealer_cards, :bank
 
   def initialize
     @dealer_cards = {}
     @user_cards = {}
-    @balance = 100
+    @user_balance = 100
+    @dealer_balance = 100
     @bank = 0
     @dealer_response = 0
     @deck ||= []
@@ -37,6 +38,20 @@ class Game
         sleep 0.2
       end
       print '               ', "\r"
+    end
+  end
+
+  def bets
+    bet = 10
+    if @user_balance - bet >= 0
+      @user_balance -= bet
+      @bank += bet
+      puts "#{user_balance}"
+    end
+    if @dealer_balance - bet >= 0
+      @dealer_balance -= bet
+      @bank += bet
+      puts "#{dealer_balance}"
     end
   end
 
@@ -83,10 +98,9 @@ class Game
   end
 
   def game_info(visibility)
-    puts 'Showdown, baby...' if visibility == 'showed'
     user_info = "#{user_cards.keys} #{user_points} points << user \\\\"
     puts user_info + ' VS ' + dealer_info(visibility)
-    puts "Ваш баланс: #{balance}. В банке: #{bank}."
+    puts "Ваш баланс: #{user_balance}. В банке: #{bank}. Баланс казино #{dealer_balance}"
   end
 
   def user_move
@@ -118,33 +132,50 @@ class Game
     user_cards.length == 3 && dealer_cards.length == 3
   end
 
-  def won_by_points
-    if user_points > dealer_points
-      puts 'User win!'
-    else
-      puts 'Dealer win!'
-    end
+  def user_win
+    puts 'User win!'
+    @user_balance += @bank
+    @bank = 0
+    game_info 'showed'
+  end
+
+  def dealer_win
+    puts 'Dealer win!'
+    @dealer_balance += @bank
+    @bank = 0
+    game_info 'showed'
   end
 
   def draw
-    dealer_points == user_points unless dealer_response.zero?
+    dealer_win if dealer_points == user_points
+  end
+
+  def on_first_move
+    if user_win_with_distribution_or_dealer_overkill
+      user_win
+      once_more
+    elsif dealer_win_with_distribution_or_user_overkill
+      dealer_win
+      once_more
+    end
+  end
+
+  def on_second_move
+    if user_points > dealer_points && user_points <= 21
+      user_win
+      once_more
+    elsif dealer_points > user_points && dealer_points <= 21
+      dealer_win
+      once_more
+    else
+      draw
+    end
   end
 
   def check_points
     system('clear')
-    if user_win_with_distribution_or_dealer_overkill
-      game_info 'showed'
-      puts 'User win!'
-      once_more
-    elsif dealer_win_with_distribution_or_user_overkill || draw
-      game_info 'showed'
-      puts 'Dealer win!'
-      once_more
-    elsif !dealer_response.zero?
-      game_info 'showed'
-      won_by_points
-      once_more
-    end
+    on_first_move if dealer_response.zero?
+    on_second_move unless dealer_response.zero?
   end
 
   def game_process
@@ -183,9 +214,12 @@ class Game
     system('clear')
     user_cards.clear
     dealer_cards.clear
+    @bank = 0
+    @dealer_response = 0
     new_deck
     shuffling
     deal_the_cards
+    bets
     game_process
   end
 
