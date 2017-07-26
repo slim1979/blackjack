@@ -1,4 +1,5 @@
 class Game
+  attr_accessor :dealer_response
   attr_reader :deck, :user_cards, :dealer_cards, :bank, :balance
 
   def initialize
@@ -6,6 +7,7 @@ class Game
     @user_cards = {}
     @balance = 100
     @bank = 0
+    @dealer_response = 0
     @deck ||= []
   end
 
@@ -74,17 +76,23 @@ class Game
     dealer_cards.values.inject { |sum, value| sum + value }
   end
 
-  def game_info
+  def dealer_info(visibility)
+    dealer_info = { 'hidden' => '// dealer >> ** points [ ' + '\'***\' ' * dealer_cards.length + ']',
+                    'showed' => "// dealer >> #{dealer_points} points #{dealer_cards.keys}" }
+    dealer_info[visibility]
+  end
+
+  def game_info(visibility)
+    puts 'Showdown, baby...' if visibility == 'showed'
     user_info = "#{user_cards.keys} #{user_points} points << user \\\\"
-    dealer_hidden = '// dealer >> ** points [ ' + '\'***\' ' * dealer_cards.length + ']'
-    puts user_info + ' VS ' + dealer_hidden
+    puts user_info + ' VS ' + dealer_info(visibility)
+    puts "Ваш баланс: #{balance}. В банке: #{bank}."
   end
 
   def user_move
     system('clear')
     puts 'User move'
-    game_info
-    puts "Ваш баланс: #{balance}. В банке: #{bank}."
+    game_info 'hidden'
     print '1.Еще. 2.Пас. 3.Вскрыть карты :'
     choise gets.to_i
   end
@@ -92,10 +100,10 @@ class Game
   def dealer_move
     system('clear')
     puts 'Dealer move'
-    game_info
+    game_info 'hidden'
     analyze
+    @dealer_response += 1
     more_to_dealer if dealer_points / 0.21 < 80
-    showdown unless dealer_points / 0.21 < 80
   end
 
   def user_win_with_distribution_or_dealer_overkill
@@ -110,19 +118,6 @@ class Game
     user_cards.length == 3 && dealer_cards.length == 3
   end
 
-  def check_points
-    if user_win_with_distribution_or_dealer_overkill
-      puts 'User win!'
-      once_more
-    elsif dealer_win_with_distribution_or_user_overkill
-      puts 'Dealer win!'
-      once_more
-    elsif user_and_dealer_own_3_cards
-      won_by_points
-      once_more
-    end
-  end
-
   def won_by_points
     if user_points > dealer_points
       puts 'User win!'
@@ -131,20 +126,41 @@ class Game
     end
   end
 
+  def draw
+    dealer_points == user_points unless dealer_response.zero?
+  end
+
+  def check_points
+    system('clear')
+    if user_win_with_distribution_or_dealer_overkill
+      game_info 'showed'
+      puts 'User win!'
+      once_more
+    elsif dealer_win_with_distribution_or_user_overkill || draw
+      game_info 'showed'
+      puts 'Dealer win!'
+      once_more
+    elsif !dealer_response.zero?
+      game_info 'showed'
+      won_by_points
+      once_more
+    end
+  end
+
   def game_process
     ace_behavior
     check_points
     user_move if user_cards.length < 3
-    game_info
+    game_info 'hidden'
     check_points
     dealer_move if user_cards.length >= 3
-    showdown
+    check_points
   end
 
-  def choise action
+  def choise(action)
     do_this = { 1 => -> { more_to_user },
                 2 => -> { dealer_move },
-                3 => -> { showdown } }
+                3 => -> { game_info 'showed' } }
     do_this[action].call
   end
 
@@ -156,27 +172,27 @@ class Game
     card_to 'dealer'
   end
 
-  def showdown
-    system('clear')
-    check_points
-    user_info = "#{user_cards.keys} #{user_points} points << user \\\\"
-    dealer_info = "// dealer >> #{dealer_points} points #{dealer_cards.keys}"
-    puts user_info + ' VS ' + dealer_info
-    check_points
+  def once_more
+    print 'Wanna play again? y/n :'
+    answer = gets.strip.chomp.downcase
+    new_game if %w[y l н д].include? answer
+    goodbye unless %w[y l н д].include? answer
   end
 
-  def once_more
-    puts 'Wanna play again?'
-    answer = gets
-    new_game if answer.include? %w[y д]
-    goodbye unless answer.include? %w[y д]
+  def new_game
+    system('clear')
+    user_cards.clear
+    dealer_cards.clear
+    new_deck
+    shuffling
+    deal_the_cards
+    game_process
+  end
+
+  def goodbye
+    puts 'so long!'
   end
 end
 
 @game = Game.new
-@game.new_deck
-@game.shuffling
-@game.deal_the_cards
-# loop do
-@game.game_process
-# end
+@game.new_game
