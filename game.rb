@@ -64,19 +64,24 @@ class Game
   end
 
   def ace_behavior
-    if user.points > 21
-      user.cards.keys.each do |card|
-        user.cards[card] = 1 if card =~ /^A.$/
-      end
-    end
+    user.cards.keys.each { |card| user.cards[card] = 1 if card =~ /^A.$/ } if user.points > 21
+    dealer.cards.keys.each { |card| dealer.cards[card] = 1 if card =~ /^A.$/ } if dealer.points > 21
   end
 
-  def user_win_with_distribution_or_dealer_overkill
-    user.points == 21 || dealer.points > 21
+  def dealer_overkill?
+    dealer.points > 21
   end
 
-  def dealer_win_with_distribution_or_user_overkill
-    dealer.points == 21 || user.points > 21
+  def user_overkill?
+    user.points > 21
+  end
+
+  def user_win_with_distribution
+    user.points == 21 || dealer_overkill?
+  end
+
+  def dealer_win_with_distribution
+    dealer.points == 21 || user_overkill?
   end
 
   def user_and_dealer_own_3_cards
@@ -88,6 +93,7 @@ class Game
     user.balance += bank
     self.bank = 0
     info 'showed'
+    once_more
   end
 
   def dealer_win
@@ -95,6 +101,7 @@ class Game
     dealer.balance += bank
     self.bank = 0
     info 'showed'
+    once_more
   end
 
   def draw
@@ -102,24 +109,18 @@ class Game
   end
 
   def on_first_move
-    if user_win_with_distribution_or_dealer_overkill
+    if user_win_with_distribution
       user_win
-      once_more
-    elsif dealer_win_with_distribution_or_user_overkill
+    elsif dealer_win_with_distribution
       dealer_win
-      once_more
     end
   end
 
   def on_second_move
-    if user.points > dealer.points && user.points <= 21
+    if user.points > dealer.points && user.points <= 21 || dealer_overkill?
       user_win
-      once_more
-    elsif dealer.points > user.points && dealer.points <= 21
-      dealer_win
-      once_more
     else
-      draw
+      dealer_win
     end
   end
 
