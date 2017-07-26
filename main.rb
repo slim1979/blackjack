@@ -1,10 +1,9 @@
 class Game
-  attr_accessor :user_points
-  attr_reader :deck, :user, :dealer, :user_points
+  attr_reader :deck, :user_cards, :dealer_cards
 
   def initialize
-    @dealer = []
-    @user = []
+    @dealer_cards = {}
+    @user_cards = {}
     @bank = 0
     @deck ||= []
   end
@@ -19,40 +18,65 @@ class Game
 
   def shuffling
     3.times do
+      deck.shuffle!
       (0..5).each do |i|
         print 'Shuffling' + '.' * i, "\r"
         sleep 0.2
       end
       print '               ', "\r"
     end
-    deck.shuffle!
   end
 
   def deal_the_cards
     2.times do
-      card = deck[0]
-      user << card
+      card = deck.first
+      value = 10 if card[0..-2].to_i.zero?
+      value = 11 if card =~ /^A.$/
+      value = card[0..-2].to_i unless card[0..-2].to_i.zero?
+      user_cards[card] = value
       deck.delete card
-      card = deck[0]
-      dealer << card
+
+      card = deck.first
+      value = 10 if card[0..-2].to_i.zero?
+      value = 11 if card =~ /^A.$/
+      value = card[0..-2].to_i unless card[0..-2].to_i.zero?
+      dealer_cards[card] = value
       deck.delete card
+    end
+  end
+
+  def cards_behavior
+    ace = /^A.$/
+    if user_points > 21
+      user_cards.keys.each do |card|
+        user_cards[card] = 1 if card =~ ace
+      end
     end
   end
 
   def user_points
-    user.inject(0) do |sum, card|
-      value = card[0].to_f unless card[0].to_f.zero?
-      value = 10 if card[0].to_f.zero?
+    user_cards.values.inject(0) { |sum, value| sum + value }
+  end
+
+  def dealer_points
+    dealer_cards.inject(0) do |sum, card|
+      value = card[0..-2].to_i unless card[0..-2].to_i.zero?
+      value = 10 if card[0..-2].to_i.zero?
       sum + value
     end
   end
 
-  def dealer_points
-    dealer.inject(0) do |sum, card|
-      value = card[0].to_f unless card[0].to_f.zero?
-      value = 10 if card[0].to_f.zero?
-      sum + value
-    end
+  # def game_process
+  #   puts "#{user_cards} #{user_points} points |< user VS dealer >| ** points ['***', '***']"
+  # end
+
+  def more_to_user
+    card = deck.first
+    value = 10 if card[0..-2].to_i.zero?
+    value = 11 if card =~ /^A.$/
+    value = card[0..-2].to_i unless card[0..-2].to_i.zero?
+    user_cards[card] = value
+    deck.delete card
   end
 end
 
@@ -60,5 +84,4 @@ end
 @game.new_deck
 @game.shuffling
 @game.deal_the_cards
-@game.user
-@game.user_points
+# @game.user_cards
