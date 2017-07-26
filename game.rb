@@ -64,9 +64,17 @@ class Game
     end
   end
 
-  def ace_behavior
+  def user_ace_behavior
     user.cards.keys.each { |card| user.cards[card] = 1 if card =~ /^A.$/ } if user.points > 21
+  end
+
+  def dealer_ace_behavior
     dealer.cards.keys.each { |card| dealer.cards[card] = 1 if card =~ /^A.$/ } if dealer.points > 21
+  end
+
+  def ace_behavior
+    user_ace_behavior
+    dealer_ace_behavior
   end
 
   def user_win
