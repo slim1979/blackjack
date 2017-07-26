@@ -1,8 +1,14 @@
+require_relative 'user.rb'
+require_relative 'dealer.rb'
+
 class Game
-  attr_accessor :dealer_response, :user_balance, :dealer_balance
-  attr_reader :deck, :user_cards, :dealer_cards, :bank
+  attr_accessor :bank
+  attr_reader :user, :dealer, :deck
 
   def initialize
+    puts 'Enter your name:'
+    @user = User.new(gets.strip.chomp)
+    @dealer = Dealer.new('Tobby')
     @bank = 0
     @deck ||= []
   end
@@ -12,16 +18,6 @@ class Game
       [2, 3, 4, 5, 6, 7, 8, 9, 10, 'V', 'Q', 'K', 'A'].each do |value|
         @deck << value.to_s + suit.to_s
       end
-    end
-  end
-
-  def analyze
-    3.times do
-      (0..5).each do |i|
-        print 'Analyze' + '.' * i, "\r"
-        sleep 0.2
-      end
-      print '               ', "\r"
     end
   end
 
@@ -36,18 +32,15 @@ class Game
     end
   end
 
+  def info(visibility)
+    puts user.info + ' VS ' + dealer.info(visibility)
+    puts "Ваш баланс: #{user.balance}. В банке: #{bank}. Баланс казино #{dealer.balance}"
+  end
+
   def bets
     bet = 10
-    if @user_balance - bet >= 0
-      @user_balance -= bet
-      @bank += bet
-      puts user_balance.to_s
-    end
-    if @dealer_balance - bet >= 0
-      @dealer_balance -= bet
-      @bank += bet
-      puts dealer_balance.to_s
-    end
+    self.bank += bet if user.bet(bet)
+    self.bank += bet if dealer.bet(bet)
   end
 
   def value(card)
@@ -59,90 +52,53 @@ class Game
 
   def card_to(person)
     card = deck.first
-    send("#{person}_cards")[card] = value(card)
+    person.cards[card] = value(card)
     deck.delete card
   end
 
   def deal_the_cards
     2.times do
-      card_to 'user'
-      card_to 'dealer'
+      card_to user
+      card_to dealer
     end
   end
 
   def ace_behavior
-    if user_points > 21
-      user_cards.keys.each do |card|
-        user_cards[card] = 1 if card =~ /^A.$/
+    if user.points > 21
+      user.cards.keys.each do |card|
+        user.cards[card] = 1 if card =~ /^A.$/
       end
     end
   end
 
-  def user_points
-    user_cards.values.inject { |sum, value| sum + value }
-  end
-
-  def dealer_points
-    dealer_cards.values.inject { |sum, value| sum + value }
-  end
-
-  def dealer_info(visibility)
-    dealer_info = { 'hidden' => '// dealer >> ** points [ ' + '\'***\' ' * dealer_cards.length + ']',
-                    'showed' => "// dealer >> #{dealer_points} points #{dealer_cards.keys}" }
-    dealer_info[visibility]
-  end
-
-  def game_info(visibility)
-    user_info = "#{user_cards.keys} #{user_points} points << user \\\\"
-    puts user_info + ' VS ' + dealer_info(visibility)
-    puts "Ваш баланс: #{user_balance}. В банке: #{bank}. Баланс казино #{dealer_balance}"
-  end
-
-  def user_move
-    system('clear')
-    puts 'User move'
-    game_info 'hidden'
-    print '1.Еще. 2.Пас. 3.Вскрыть карты :'
-    choise gets.to_i
-  end
-
-  def dealer_move
-    system('clear')
-    puts 'Dealer move'
-    game_info 'hidden'
-    analyze
-    @dealer_response += 1
-    more_to_dealer if dealer_points / 0.21 < 80
-  end
-
   def user_win_with_distribution_or_dealer_overkill
-    user_points == 21 || dealer_points > 21
+    user.points == 21 || dealer.points > 21
   end
 
   def dealer_win_with_distribution_or_user_overkill
-    dealer_points == 21 || user_points > 21
+    dealer.points == 21 || user.points > 21
   end
 
   def user_and_dealer_own_3_cards
-    user_cards.length == 3 && dealer_cards.length == 3
+    user.cards.length == 3 && dealer.cards.length == 3
   end
 
   def user_win
-    puts 'User win!'
-    @user_balance += @bank
-    @bank = 0
-    game_info 'showed'
+    puts "#{user.name} win!"
+    user.balance += bank
+    self.bank = 0
+    info 'showed'
   end
 
   def dealer_win
-    puts 'Dealer win!'
-    @dealer_balance += @bank
-    @bank = 0
-    game_info 'showed'
+    puts "#{dealer.name} win!"
+    dealer.balance += bank
+    self.bank = 0
+    info 'showed'
   end
 
   def draw
-    dealer_win if dealer_points == user_points
+    dealer_win if dealer.points == user.points
   end
 
   def on_first_move
@@ -156,10 +112,10 @@ class Game
   end
 
   def on_second_move
-    if user_points > dealer_points && user_points <= 21
+    if user.points > dealer.points && user.points <= 21
       user_win
       once_more
-    elsif dealer_points > user_points && dealer_points <= 21
+    elsif dealer.points > user.points && dealer.points <= 21
       dealer_win
       once_more
     else
@@ -170,28 +126,39 @@ class Game
   def check_points
     system('clear')
     ace_behavior
-    on_first_move if dealer_response.zero?
-    on_second_move unless dealer_response.zero?
+    on_first_move if dealer.response.zero?
+    on_second_move unless dealer.response.zero?
+  end
+
+  def user_move
+    system('clear')
+    check_points
+    puts "#{user.name} move"
+    info 'hidden'
+    print '1.Еще. 2.Пас. 3.Вскрыть карты :'
+    choise gets.to_i
+  end
+
+  def dealer_move
+    system('clear')
+    check_points
+    puts "#{dealer.name} move"
+    info 'hidden'
+    dealer.analyze
+    card_to dealer if dealer.points / 0.21 < 80
+    check_points
   end
 
   def game_process
-    check_points
-    user_move if user_cards.length < 3
-    game_info 'hidden'
-    check_points
-    dealer_move if user_cards.length >= 3
-    check_points
+    user_move
+    dealer_move
   end
 
   def choise(action)
-    do_this = { 1 => -> { more_to_user },
-                2 => -> { dealer_move },
-                3 => -> { game_info 'showed' } }
+    do_this = { 1 => -> { card_to user },
+                2 => -> { dealer.move },
+                3 => -> { info 'showed' } }
     do_this[action].call
-  end
-
-  def more_to_user
-    card_to 'user'
   end
 
   def more_to_dealer
@@ -207,10 +174,10 @@ class Game
 
   def new_game
     system('clear')
-    user_cards.clear
-    dealer_cards.clear
-    @bank = 0
-    @dealer_response = 0
+    user.cards.clear
+    dealer.cards.clear
+    self.bank = 0
+    dealer.response = 0
     new_deck
     shuffling
     deal_the_cards
@@ -222,3 +189,6 @@ class Game
     puts 'so long!'
   end
 end
+
+@game = Game.new
+@game.new_game
