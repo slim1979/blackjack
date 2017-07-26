@@ -17,10 +17,10 @@ class Game
     end
   end
 
-  def analyzing
+  def analyze
     3.times do
       (0..5).each do |i|
-        print 'Analyzing' + '.' * i, "\r"
+        print 'Analyze' + '.' * i, "\r"
         sleep 0.2
       end
       print '               ', "\r"
@@ -81,6 +81,7 @@ class Game
   end
 
   def user_move
+    system('clear')
     puts 'User move'
     game_info
     puts "Ваш баланс: #{balance}. В банке: #{bank}."
@@ -89,16 +90,55 @@ class Game
   end
 
   def dealer_move
+    system('clear')
     puts 'Dealer move'
     game_info
-    analyzing
+    analyze
+    more_to_dealer if dealer_points / 0.21 < 80
+    showdown unless dealer_points / 0.21 < 80
+  end
+
+  def user_win_with_distribution_or_dealer_overkill
+    user_points == 21 || dealer_points > 21
+  end
+
+  def dealer_win_with_distribution_or_user_overkill
+    dealer_points == 21 || user_points > 21
+  end
+
+  def user_and_dealer_own_3_cards
+    user_cards.length == 3 && dealer_cards.length == 3
+  end
+
+  def check_points
+    if user_win_with_distribution_or_dealer_overkill
+      puts 'User win!'
+      once_more
+    elsif dealer_win_with_distribution_or_user_overkill
+      puts 'Dealer win!'
+      once_more
+    elsif user_and_dealer_own_3_cards
+      won_by_points
+      once_more
+    end
+  end
+
+  def won_by_points
+    if user_points > dealer_points
+      puts 'User win!'
+    else
+      puts 'Dealer win!'
+    end
   end
 
   def game_process
-    system('clear')
     ace_behavior
+    check_points
     user_move if user_cards.length < 3
+    game_info
+    check_points
     dealer_move if user_cards.length >= 3
+    showdown
   end
 
   def choise action
@@ -111,12 +151,32 @@ class Game
   def more_to_user
     card_to 'user'
   end
+
+  def more_to_dealer
+    card_to 'dealer'
+  end
+
+  def showdown
+    system('clear')
+    check_points
+    user_info = "#{user_cards.keys} #{user_points} points << user \\\\"
+    dealer_info = "// dealer >> #{dealer_points} points #{dealer_cards.keys}"
+    puts user_info + ' VS ' + dealer_info
+    check_points
+  end
+
+  def once_more
+    puts 'Wanna play again?'
+    answer = gets
+    new_game if answer.include? %w[y д]
+    goodbye unless answer.include? %w[y д]
+  end
 end
 
 @game = Game.new
 @game.new_deck
 @game.shuffling
 @game.deal_the_cards
-loop do
-  @game.game_process
-end
+# loop do
+@game.game_process
+# end
