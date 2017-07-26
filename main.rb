@@ -17,6 +17,16 @@ class Game
     end
   end
 
+  def analyzing
+    3.times do
+      (0..5).each do |i|
+        print 'Analyzing' + '.' * i, "\r"
+        sleep 0.2
+      end
+      print '               ', "\r"
+    end
+  end
+
   def shuffling
     3.times do
       deck.shuffle!
@@ -48,11 +58,10 @@ class Game
     end
   end
 
-  def cards_behavior
-    ace = /^A.$/
+  def ace_behavior
     if user_points > 21
       user_cards.keys.each do |card|
-        user_cards[card] = 1 if card =~ ace
+        user_cards[card] = 1 if card =~ /^A.$/
       end
     end
   end
@@ -65,17 +74,37 @@ class Game
     dealer_cards.values.inject { |sum, value| sum + value }
   end
 
-  def game_process
-    puts "#{user_cards.keys} #{user_points} points << user \\\\ VS // dealer >> ** points " + '[ ' + '\'***\' ' * dealer_cards.length + ']'
+  def game_info
+    user_info = "#{user_cards.keys} #{user_points} points << user \\\\"
+    dealer_hidden = '// dealer >> ** points [ ' + '\'***\' ' * dealer_cards.length + ']'
+    puts user_info + ' VS ' + dealer_hidden
+  end
+
+  def user_move
+    puts 'User move'
+    game_info
     puts "Ваш баланс: #{balance}. В банке: #{bank}."
-    puts '1.Еще. 2.Пас. 4.Поднять. 3.Вскрыть карты :'
+    print '1.Еще. 2.Пас. 3.Вскрыть карты :'
     choise gets.to_i
+  end
+
+  def dealer_move
+    puts 'Dealer move'
+    game_info
+    analyzing
+  end
+
+  def game_process
+    system('clear')
+    ace_behavior
+    user_move if user_cards.length < 3
+    dealer_move if user_cards.length >= 3
   end
 
   def choise action
     do_this = { 1 => -> { more_to_user },
-                2 => -> {},
-                3 => -> {} }
+                2 => -> { dealer_move },
+                3 => -> { showdown } }
     do_this[action].call
   end
 
@@ -88,4 +117,6 @@ end
 @game.new_deck
 @game.shuffling
 @game.deal_the_cards
-@game.game_process
+loop do
+  @game.game_process
+end
