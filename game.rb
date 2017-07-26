@@ -68,26 +68,6 @@ class Game
     dealer.cards.keys.each { |card| dealer.cards[card] = 1 if card =~ /^A.$/ } if dealer.points > 21
   end
 
-  def dealer_overkill?
-    dealer.points > 21
-  end
-
-  def user_overkill?
-    user.points > 21
-  end
-
-  def user_win_with_distribution
-    user.points == 21 || dealer_overkill?
-  end
-
-  def dealer_win_with_distribution
-    dealer.points == 21 || user_overkill?
-  end
-
-  def user_and_dealer_own_3_cards
-    user.cards.length == 3 && dealer.cards.length == 3
-  end
-
   def user_win
     puts "#{user.name} win!"
     user.balance += bank
@@ -106,6 +86,26 @@ class Game
 
   def draw
     dealer_win if dealer.points == user.points
+  end
+
+  def dealer_overkill?
+    dealer.points > 21
+  end
+
+  def user_overkill?
+    user.points > 21
+  end
+
+  def user_win_with_distribution
+    user.points == 21 || dealer_overkill?
+  end
+
+  def dealer_win_with_distribution
+    dealer.points == 21 || user_overkill?
+  end
+
+  def user_and_dealer_own_3_cards
+    user.cards.length == 3 && dealer.cards.length == 3
   end
 
   def on_first_move
@@ -129,6 +129,12 @@ class Game
     ace_behavior
     on_first_move if dealer.response.zero?
     on_second_move unless dealer.response.zero?
+  end
+
+  def won_by_points
+    system('clear')
+    user_win if user.points > dealer.points
+    dealer_win if dealer.points > user.points
   end
 
   def user_move
@@ -158,7 +164,7 @@ class Game
   def choise(action)
     do_this = { 1 => -> { card_to user },
                 2 => -> { dealer.move },
-                3 => -> { info 'showed' } }
+                3 => -> { won_by_points } }
     do_this[action].call
   end
 
