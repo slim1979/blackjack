@@ -1,9 +1,10 @@
 class Game
-  attr_reader :deck, :user_cards, :dealer_cards
+  attr_reader :deck, :user_cards, :dealer_cards, :bank, :balance
 
   def initialize
     @dealer_cards = {}
     @user_cards = {}
+    @balance = 100
     @bank = 0
     @deck ||= []
   end
@@ -27,21 +28,23 @@ class Game
     end
   end
 
+  def value(card)
+    value =  10 if card[0..-2].to_i.zero?
+    value =  11 if card =~ /^A.$/
+    value = card[0..-2].to_i unless card[0..-2].to_i.zero?
+    value
+  end
+
+  def card_to(person)
+    card = deck.first
+    send("#{person}_cards")[card] = value(card)
+    deck.delete card
+  end
+
   def deal_the_cards
     2.times do
-      card = deck.first
-      value = 10 if card[0..-2].to_i.zero?
-      value = 11 if card =~ /^A.$/
-      value = card[0..-2].to_i unless card[0..-2].to_i.zero?
-      user_cards[card] = value
-      deck.delete card
-
-      card = deck.first
-      value = 10 if card[0..-2].to_i.zero?
-      value = 11 if card =~ /^A.$/
-      value = card[0..-2].to_i unless card[0..-2].to_i.zero?
-      dealer_cards[card] = value
-      deck.delete card
+      card_to 'user'
+      card_to 'dealer'
     end
   end
 
@@ -55,28 +58,29 @@ class Game
   end
 
   def user_points
-    user_cards.values.inject(0) { |sum, value| sum + value }
+    user_cards.values.inject { |sum, value| sum + value }
   end
 
   def dealer_points
-    dealer_cards.inject(0) do |sum, card|
-      value = card[0..-2].to_i unless card[0..-2].to_i.zero?
-      value = 10 if card[0..-2].to_i.zero?
-      sum + value
-    end
+    dealer_cards.values.inject { |sum, value| sum + value }
   end
 
-  # def game_process
-  #   puts "#{user_cards} #{user_points} points |< user VS dealer >| ** points ['***', '***']"
-  # end
+  def game_process
+    puts "#{user_cards.keys} #{user_points} points << user \\\\ VS // dealer >> ** points " + '[ ' + '\'***\' ' * dealer_cards.length + ']'
+    puts "Ваш баланс: #{balance}. В банке: #{bank}."
+    puts '1.Еще. 2.Пас. 4.Поднять. 3.Вскрыть карты :'
+    choise gets.to_i
+  end
+
+  def choise action
+    do_this = { 1 => -> { more_to_user },
+                2 => -> {},
+                3 => -> {} }
+    do_this[action].call
+  end
 
   def more_to_user
-    card = deck.first
-    value = 10 if card[0..-2].to_i.zero?
-    value = 11 if card =~ /^A.$/
-    value = card[0..-2].to_i unless card[0..-2].to_i.zero?
-    user_cards[card] = value
-    deck.delete card
+    card_to 'user'
   end
 end
 
@@ -84,4 +88,4 @@ end
 @game.new_deck
 @game.shuffling
 @game.deal_the_cards
-# @game.user_cards
+@game.game_process
