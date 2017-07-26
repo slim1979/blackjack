@@ -7,4 +7,9 @@ class User
     @balance = 100
     @cards = {}
   end
+
+  def points
+    cards.values.inject { |sum, value| sum + value }
+  end
+
 end

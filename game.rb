@@ -3,12 +3,7 @@ class Game
   attr_reader :deck, :user_cards, :dealer_cards, :bank
 
   def initialize
-    @dealer_cards = {}
-    @user_cards = {}
-    @user_balance = 100
-    @dealer_balance = 100
     @bank = 0
-    @dealer_response = 0
     @deck ||= []
   end
 
@@ -46,12 +41,12 @@ class Game
     if @user_balance - bet >= 0
       @user_balance -= bet
       @bank += bet
-      puts "#{user_balance}"
+      puts user_balance.to_s
     end
     if @dealer_balance - bet >= 0
       @dealer_balance -= bet
       @bank += bet
-      puts "#{dealer_balance}"
+      puts dealer_balance.to_s
     end
   end
 
@@ -174,12 +169,12 @@ class Game
 
   def check_points
     system('clear')
+    ace_behavior
     on_first_move if dealer_response.zero?
     on_second_move unless dealer_response.zero?
   end
 
   def game_process
-    ace_behavior
     check_points
     user_move if user_cards.length < 3
     game_info 'hidden'
@@ -227,6 +222,3 @@ class Game
     puts 'so long!'
   end
 end
-
-@game = Game.new
-@game.new_game
