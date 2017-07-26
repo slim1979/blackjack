@@ -11,6 +11,7 @@ class Game
     @dealer = Dealer.new('Tobby')
     @bank = 0
     @deck ||= []
+    new_game
   end
 
   def new_deck
@@ -104,10 +105,6 @@ class Game
     dealer.points == 21 || user_overkill?
   end
 
-  def user_and_dealer_own_3_cards
-    user.cards.length == 3 && dealer.cards.length == 3
-  end
-
   def on_first_move
     if user_win_with_distribution
       user_win
@@ -176,7 +173,7 @@ class Game
     print 'Wanna play again? y/n :'
     answer = gets.strip.chomp.downcase
     new_game if %w[y l н д].include? answer
-    goodbye unless %w[y l н д].include? answer
+    false unless %w[y l н д].include? answer
   end
 
   def new_game
@@ -198,4 +195,3 @@ class Game
 end
 
 @game = Game.new
-@game.new_game
