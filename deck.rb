@@ -23,7 +23,7 @@ class Deck
         print 'Shuffling' + '.' * i, "\r"
         sleep 0.2
       end
-      print '               ', "\r"
+      print ' ' * 14, "\r"
     end
   end
 

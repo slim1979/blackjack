@@ -12,7 +12,7 @@ class Dealer < User
         print 'Analyze' + '.' * i, "\r"
         sleep 0.2
       end
-      print '               ', "\r"
+      print ' ' * 12, "\r"
     end
     self.response += 1
   end
