@@ -34,4 +34,8 @@ class Dealer < User
   def no_risk_zone?
     points / 0.21 < 80
   end
+
+  def ad?(user)
+    points > user.points
+  end
 end

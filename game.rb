@@ -53,10 +53,6 @@ class Game
     person.cards.keys.each { |card| person.cards[card] = 1 if card =~ /^A.$/ } if person.points > 21
   end
 
-  def persons
-    [user, dealer]
-  end
-
   def round_won_by(person)
     puts "#{person.name} win!"
     person.balance += bank
@@ -69,21 +65,13 @@ class Game
     dealer.points == user.points
   end
 
-  def user_ad?
-    user.points > dealer.points
-  end
-
-  def dealer_ad?
-    dealer.points > user.points
-  end
-
   def dealer_wasnt_move_yet
     round_won_by user if user.got_21?
     round_won_by dealerif dealer.got_21? || user.overkill?
   end
 
   def user_win?
-    user_ad? && user.in_range?
+    user.ad?(dealer) && user.in_range?
   end
 
   def dealer_make_his_move
@@ -93,15 +81,15 @@ class Game
 
   def check_points
     system('clear')
-    persons.each { |person| ace_behavior(person) }
+    [user, dealer].each { |person| ace_behavior(person) }
     dealer_wasnt_move_yet if dealer.response.zero?
     dealer_make_his_move unless dealer.response.zero?
   end
 
   def won_by_points
     system('clear')
-    round_won_by(user) if user_ad?
-    round_won_by(dealer) if dealer_ad?
+    round_won_by(user) if user.ad?(dealer)
+    round_won_by(dealer) if dealer.ad?(user)
   end
 
   def user_move
