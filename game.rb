@@ -1,4 +1,5 @@
 require_relative 'user.rb'
+require_relative 'deck.rb'
 require_relative 'dealer.rb'
 
 class Game
@@ -9,28 +10,19 @@ class Game
     puts 'Enter your name:'
     @user = User.new(gets.strip.chomp)
     @dealer = Dealer.new('Tobby')
-    @bank = 0
-    @deck ||= []
     new_game
   end
 
-  def new_deck
-    ["\u2660", "\u2665", "\u2663", "\u2666"].each do |suit|
-      [2, 3, 4, 5, 6, 7, 8, 9, 10, 'V', 'Q', 'K', 'A'].each do |value|
-        @deck << value.to_s + suit.to_s
-      end
-    end
-  end
-
-  def shuffling
-    3.times do
-      deck.shuffle!
-      (0..5).each do |i|
-        print 'Shuffling' + '.' * i, "\r"
-        sleep 0.2
-      end
-      print '               ', "\r"
-    end
+  def new_game
+    system('clear')
+    user.cards.clear
+    dealer.cards.clear
+    dealer.response = 0
+    @bank = 0
+    @deck = Deck.new
+    deal_the_cards
+    bets
+    game_process
   end
 
   def info(visibility)
@@ -44,17 +36,10 @@ class Game
     self.bank += bet if dealer.bet(bet)
   end
 
-  def value(card)
-    value =  10 if card[0..-2].to_i.zero?
-    value =  11 if card =~ /^A.$/
-    value = card[0..-2].to_i unless card[0..-2].to_i.zero?
-    value
-  end
-
   def card_to(person)
-    card = deck.first
-    person.cards[card] = value(card)
-    deck.delete card
+    card = deck.content.first
+    person.cards[card] = deck.value_of(card)
+    deck.content.delete card
   end
 
   def deal_the_cards
@@ -64,17 +49,8 @@ class Game
     end
   end
 
-  def user_ace_behavior
-    user.cards.keys.each { |card| user.cards[card] = 1 if card =~ /^A.$/ } if user.points > 21
-  end
-
-  def dealer_ace_behavior
-    dealer.cards.keys.each { |card| dealer.cards[card] = 1 if card =~ /^A.$/ } if dealer.points > 21
-  end
-
-  def ace_behavior
-    user_ace_behavior
-    dealer_ace_behavior
+  def ace_behavior(person)
+    person.cards.keys.each { |card| person.cards[card] = 1 if card =~ /^A.$/ } if person.points > 21
   end
 
   def user_win
@@ -131,7 +107,8 @@ class Game
 
   def check_points
     system('clear')
-    ace_behavior
+    ace_behavior(user)
+    ace_behavior(dealer)
     on_first_move if dealer.response.zero?
     on_second_move unless dealer.response.zero?
   end
@@ -168,37 +145,16 @@ class Game
 
   def choise(action)
     do_this = { 1 => -> { card_to user },
-                2 => -> { dealer.move },
+                2 => -> { dealer_move },
                 3 => -> { won_by_points } }
     do_this[action].call
-  end
-
-  def more_to_dealer
-    card_to 'dealer'
   end
 
   def once_more
     print 'Wanna play again? y/n :'
     answer = gets.strip.chomp.downcase
     new_game if %w[y l н д].include? answer
-    false unless %w[y l н д].include? answer
-  end
-
-  def new_game
-    system('clear')
-    user.cards.clear
-    dealer.cards.clear
-    self.bank = 0
-    dealer.response = 0
-    new_deck
-    shuffling
-    deal_the_cards
-    bets
-    game_process
-  end
-
-  def goodbye
-    puts 'so long!'
+    puts 'Goodbye!' && exit unless %w[y l н д].include? answer
   end
 end
 
