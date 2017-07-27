@@ -20,9 +20,6 @@ class User
     self.balance -= bet if balance - bet >= 0
   end
 
-  def move
-  end
-
   def more
     card_to self.class.to_s.downcase
   end
