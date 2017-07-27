@@ -53,24 +53,20 @@ class Game
     person.cards.keys.each { |card| person.cards[card] = 1 if card =~ /^A.$/ } if person.points > 21
   end
 
-  def user_win
-    puts "#{user.name} win!"
-    user.balance += bank
-    self.bank = 0
-    info 'showed'
-    once_more
+  def persons
+    [user, dealer]
   end
 
-  def dealer_win
-    puts "#{dealer.name} win!"
-    dealer.balance += bank
+  def round_won_by(person)
+    puts "#{person.name} win!"
+    person.balance += bank
     self.bank = 0
     info 'showed'
-    once_more
+    # once_more
   end
 
   def draw
-    dealer_win if dealer.points == user.points
+    round_won_by dealer if dealer.points == user.points
   end
 
   def dealer_overkill?
@@ -91,32 +87,31 @@ class Game
 
   def on_first_move
     if user_win_with_distribution
-      user_win
+      round_won_by user
     elsif dealer_win_with_distribution
-      dealer_win
+      round_won_by dealer
     end
   end
 
   def on_second_move
     if user.points > dealer.points && user.points <= 21 || dealer_overkill?
-      user_win
+      round_won_by user
     else
-      dealer_win
+      round_won_by dealer
     end
   end
 
   def check_points
     system('clear')
-    ace_behavior(user)
-    ace_behavior(dealer)
+    persons.each { |person| ace_behavior(person) }
     on_first_move if dealer.response.zero?
     on_second_move unless dealer.response.zero?
   end
 
   def won_by_points
     system('clear')
-    user_win if user.points > dealer.points
-    dealer_win if dealer.points > user.points
+    round_won_by(user) if user.points > dealer.points
+    round_won_by(dealer) if dealer.points > user.points
   end
 
   def user_move
