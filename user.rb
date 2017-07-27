@@ -35,4 +35,8 @@ class User
   def in_range?
     points <= 21
   end
+
+  def ad?(dealer)
+    points > dealer.points
+  end
 end
