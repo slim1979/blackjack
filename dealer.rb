@@ -31,7 +31,7 @@ class Dealer < User
     points == 21
   end
 
-  def no_risk_zone?
+  def in_safe_area?
     points / 0.21 < 80
   end
 
