@@ -1,7 +1,7 @@
 require_relative 'user.rb'
 require_relative 'deck.rb'
 require_relative 'dealer.rb'
-
+# main class for the game
 class Game
   attr_accessor :bank
   attr_reader :user, :dealer, :deck
@@ -10,17 +10,16 @@ class Game
     puts 'Enter your name:'
     @user = User.new(gets.strip.chomp)
     @dealer = Dealer.new('Tobby')
+    @bank = 0
     new_game
   end
 
   def new_game
     system('clear')
-    user.cards.clear
-    dealer.cards.clear
+    [user, dealer].each { |person| person.cards.clear }
     dealer.response = 0
-    @bank = 0
     @deck = Deck.new
-    bets
+    bets(10)
     deal_the_cards
     user_move
   end
@@ -30,8 +29,7 @@ class Game
     puts "Ваш баланс: #{user.balance}. В банке: #{bank}. Баланс казино #{dealer.balance}"
   end
 
-  def bets
-    bet = 10
+  def bets(bet)
     self.bank += bet if user.bet(bet)
     self.bank += bet if dealer.bet(bet)
   end
@@ -125,4 +123,4 @@ class Game
   end
 end
 
-@game = Game.new
+Game.new
