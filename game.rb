@@ -67,7 +67,7 @@ class Game
 
   def dealer_wasnt_move_yet
     round_won_by user if user.got_21?
-    round_won_by dealerif dealer.got_21? || user.overkill?
+    round_won_by dealer if dealer.got_21? || user.overkill?
   end
 
   def user_win?
@@ -98,7 +98,8 @@ class Game
     puts "#{user.name} move"
     info 'hidden'
     print '1.Еще. 2.Пас. 3.Вскрыть карты :'
-    choise gets.to_i
+    answer = gets.to_i; choise answer
+    dealer_move unless answer == 3
   end
 
   def dealer_move
@@ -107,7 +108,7 @@ class Game
     puts "#{dealer.name} move"
     info 'hidden'
     dealer.analyze
-    card_to dealer if dealer.no_risk_zone?
+    card_to dealer if dealer.in_no_risk_zone?
     check_points
   end
 
