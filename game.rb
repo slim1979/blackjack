@@ -20,9 +20,9 @@ class Game
     dealer.response = 0
     @bank = 0
     @deck = Deck.new
-    deal_the_cards
     bets
-    game_process
+    deal_the_cards
+    user_move
   end
 
   def info(visibility)
@@ -62,56 +62,46 @@ class Game
     person.balance += bank
     self.bank = 0
     info 'showed'
-    # once_more
+    once_more
   end
 
-  def draw
-    round_won_by dealer if dealer.points == user.points
+  def draw?
+    dealer.points == user.points
   end
 
-  def dealer_overkill?
-    dealer.points > 21
+  def user_ad?
+    user.points > dealer.points
   end
 
-  def user_overkill?
-    user.points > 21
+  def dealer_ad?
+    dealer.points > user.points
   end
 
-  def user_win_with_distribution
-    user.points == 21 || dealer_overkill?
+  def dealer_wasnt_move_yet
+    round_won_by user if user.got_21?
+    round_won_by dealerif dealer.got_21? || user.overkill?
   end
 
-  def dealer_win_with_distribution
-    dealer.points == 21 || user_overkill?
+  def user_win?
+    user_ad? && user.in_range?
   end
 
-  def on_first_move
-    if user_win_with_distribution
-      round_won_by user
-    elsif dealer_win_with_distribution
-      round_won_by dealer
-    end
-  end
-
-  def on_second_move
-    if user.points > dealer.points && user.points <= 21 || dealer_overkill?
-      round_won_by user
-    else
-      round_won_by dealer
-    end
+  def dealer_make_his_move
+    round_won_by user if user_win? || dealer.overkill?
+    round_won_by dealer unless user_win? || dealer.overkill?
   end
 
   def check_points
     system('clear')
     persons.each { |person| ace_behavior(person) }
-    on_first_move if dealer.response.zero?
-    on_second_move unless dealer.response.zero?
+    dealer_wasnt_move_yet if dealer.response.zero?
+    dealer_make_his_move unless dealer.response.zero?
   end
 
   def won_by_points
     system('clear')
-    round_won_by(user) if user.points > dealer.points
-    round_won_by(dealer) if dealer.points > user.points
+    round_won_by(user) if user_ad?
+    round_won_by(dealer) if dealer_ad?
   end
 
   def user_move
@@ -129,19 +119,12 @@ class Game
     puts "#{dealer.name} move"
     info 'hidden'
     dealer.analyze
-    card_to dealer if dealer.points / 0.21 < 80
+    card_to dealer if dealer.no_risk_zone?
     check_points
   end
 
-  def game_process
-    user_move
-    dealer_move
-  end
-
   def choise(action)
-    do_this = { 1 => -> { card_to user },
-                2 => -> { dealer_move },
-                3 => -> { won_by_points } }
+    do_this = { 1 => -> { card_to user }, 2 => -> { dealer_move }, 3 => -> { won_by_points } }
     do_this[action].call
   end
 
@@ -149,7 +132,7 @@ class Game
     print 'Wanna play again? y/n :'
     answer = gets.strip.chomp.downcase
     new_game if %w[y l н д].include? answer
-    puts 'Goodbye!' && exit unless %w[y l н д].include? answer
+    puts 'Goodbye!'; exit unless %w[y l н д].include? answer
   end
 end
 
