@@ -31,7 +31,11 @@ class Dealer < User
     points == 21
   end
 
+<<<<<<< HEAD
   def in_safe_area?
+=======
+  def in_no_risk_zone?
+>>>>>>> 051df6cb2a8df139c4ea972f8937ff2b667c0587
     points / 0.21 < 80
   end
 

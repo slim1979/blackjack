@@ -108,7 +108,11 @@ class Game
     puts "#{dealer.name} move"
     info 'hidden'
     dealer.analyze
+<<<<<<< HEAD
     card_to dealer if dealer.in_safe_area?
+=======
+    card_to dealer if dealer.in_no_risk_zone?
+>>>>>>> 051df6cb2a8df139c4ea972f8937ff2b667c0587
     check_points
   end
 
