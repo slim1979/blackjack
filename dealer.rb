@@ -22,4 +22,16 @@ class Dealer < User
              'showed' => "// dealer >> #{points} points #{cards.keys}" }
     info[visibility]
   end
+
+  def overkill?
+    points > 21
+  end
+
+  def got_21?
+    points == 21
+  end
+
+  def no_risk_zone?
+    points / 0.21 < 80
+  end
 end
