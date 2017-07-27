@@ -24,4 +24,15 @@ class User
     card_to self.class.to_s.downcase
   end
 
+  def overkill?
+    points > 21
+  end
+
+  def got_21?
+    points == 21
+  end
+
+  def in_range?
+    points <= 21
+  end
 end
